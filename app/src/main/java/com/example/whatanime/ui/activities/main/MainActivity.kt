@@ -21,7 +21,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -34,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -42,12 +42,14 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
@@ -122,7 +124,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color.White),
+                        .background(color = colorResource(id = R.color.primaryColor)),
                     horizontalAlignment = CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -170,14 +172,9 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier,
         hint: String = "",
         onSearch: (String) -> Unit = {},
-
-        ) {
-        var text by remember {
-            mutableStateOf("")
-        }
-        var isHintDisplayed by remember {
-            mutableStateOf(hint != "")
-        }
+    ) {
+        var text by remember { mutableStateOf("") }
+        var isHintDisplayed by remember { mutableStateOf(hint != "") }
         var warningVisible by remember { mutableStateOf(false) }
         var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
         val context = LocalContext.current
@@ -186,7 +183,7 @@ class MainActivity : ComponentActivity() {
             contract = ActivityResultContracts.GetContent(),
             onResult = { result ->
                 if (result != null) {
-                    val inputStream = contentResolver.openInputStream(result)
+                    val inputStream = context.contentResolver.openInputStream(result)
                     val bytes = inputStream?.readBytes()
                     inputStream?.close()
 
@@ -201,6 +198,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         )
+
         Box(modifier = modifier) {
             BasicTextField(
                 value = text,
@@ -245,15 +243,12 @@ class MainActivity : ComponentActivity() {
                 )
             }
             Icon(
-                painterResource(
-                    id = R.drawable.folder
-                ),
+                painterResource(id = R.drawable.folder),
                 contentDescription = "search file",
                 tint = Color.Unspecified,
                 modifier = Modifier
                     .size(48.dp)
                     .align(CenterEnd)
-                    .fillMaxWidth()
                     .padding(end = 20.dp, bottom = 10.dp)
                     .clickable { chooseImageLauncher.launch("image/*") }
             )
@@ -284,13 +279,13 @@ class MainActivity : ComponentActivity() {
                 startActivity(intent)
             },
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme
+                containerColor = Color.White
             )
 
         ) {
             Column(
                 modifier = modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context = LocalContext.current)
@@ -301,13 +296,15 @@ class MainActivity : ComponentActivity() {
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(200.dp)
                 )
                 Text(
-                    fontSize = 16.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.SansSerif,
                     modifier = modifier
-                        .align(CenterHorizontally),
+                        .align(CenterHorizontally)
+                        .padding(20.dp),
                     text = anime.anilist?.title?.english ?: "anime title"
                 )
             }
