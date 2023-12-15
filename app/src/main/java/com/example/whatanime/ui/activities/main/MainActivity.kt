@@ -21,14 +21,20 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -45,6 +51,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -61,6 +68,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
+    private lateinit var navController: NavHostController
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this, MainViewModel.Factory)[MainViewModel::class.java]
@@ -113,6 +121,7 @@ class MainActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f)
                         .background(Color.White),
                     horizontalAlignment = CenterHorizontally,
                     verticalArrangement = Arrangement.Center
@@ -122,7 +131,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
     @Composable
     private fun AnimeListScreen(mainUiState: MainUiState) {
         when (mainUiState) {
@@ -135,7 +143,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
     @Composable
     private fun ErrorText() {
         Text(
@@ -143,7 +150,6 @@ class MainActivity : ComponentActivity() {
             color = secondaryColor,
         )
     }
-
     @Composable
     private fun EmptyText() {
         Text(
@@ -152,14 +158,10 @@ class MainActivity : ComponentActivity() {
 
             )
     }
-
     @Composable
     fun LoadingBar() {
-        Row(
-            modifier = Modifier
-                .fillMaxHeight()
-        ) {
-            Text(text = "Loading")
+        Box(contentAlignment = Center, modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
     }
 
@@ -223,7 +225,7 @@ class MainActivity : ComponentActivity() {
                 keyboardActions = KeyboardActions(
                     onSearch = {
                         onSearch(text)
-                        viewModel.getAnimesByUrl("https://images.plurk.com/32B15UXxymfSMwKGTObY5e.jpg")
+                        viewModel.getAnimesByUrl(text)
                     }
                 ),
             )
@@ -276,12 +278,15 @@ class MainActivity : ComponentActivity() {
     private fun AnimeCard(anime: Result, modifier: Modifier = Modifier) {
         Card(modifier = modifier
             .padding(18.dp)
-            .background(color = secondaryColor)
             .clickable {
                 val intent = Intent(this, DetailActivity::class.java)
-                intent.putExtra("ANIME", anime)
+                intent.putExtra("anime", anime)
                 startActivity(intent)
-            }
+            },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme
+            )
+
         ) {
             Column(
                 modifier = modifier
