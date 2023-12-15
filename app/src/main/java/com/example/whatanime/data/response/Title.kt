@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 @Parcelize
 @Serializable
 data class Title(
-    @Contextual
+    @SerialName("english")
     val english: String?,
     @SerialName("native")
     val native: String?,

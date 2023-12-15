@@ -43,7 +43,7 @@ class MainViewModel(private val animeRepository: AnimeRepository): ViewModel() {
             }else {
                 Log.d("MainViewModel", "url: ${result}")
                 Log.d("MainViewModel", "getAnime: ${result.result.size}")
-                mainUiState = MainUiState.Success(result.result.orEmpty())
+                mainUiState = MainUiState.Success(result.result)
             }
         } catch (e: IOException) {
             Log.d("MainViewMode", "getAnime error: ${e.message}")
@@ -60,10 +60,10 @@ class MainViewModel(private val animeRepository: AnimeRepository): ViewModel() {
                 image = url
             )
             Log.d("ResponseDebug", "JSON Response: $result")
-            if(result.result?.isEmpty() == true) {
+            if(result.result!!.isEmpty()) {
                 mainUiState = MainUiState.Empty
             } else {
-                mainUiState = MainUiState.Success(result.result.orEmpty())
+                mainUiState = MainUiState.Success(result.result)
             }
         } catch (e: IOException) {
             Log.d("MainViewMode", "getAnime error: ${e.message}")

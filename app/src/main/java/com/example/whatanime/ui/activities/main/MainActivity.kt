@@ -2,9 +2,9 @@ package com.example.whatanime.ui.activities.main
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -27,22 +27,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
-import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -53,10 +51,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.whatanime.R
@@ -64,77 +58,62 @@ import com.example.whatanime.data.response.Result
 import com.example.whatanime.ui.activities.detail.DetailActivity
 import com.example.whatanime.ui.theme.WhatanimeTheme
 import com.example.whatanime.ui.theme.secondaryColor
+import com.example.whatanime.util.checkData
+import com.example.whatanime.util.doubleToTime
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
-    private lateinit var navController: NavHostController
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this, MainViewModel.Factory)[MainViewModel::class.java]
         setContent {
             WhatanimeTheme {
-                NavHost(
-                    navController = rememberNavController(),
-                    startDestination = Screen.Home.route
+                Surface(
+                    color = Color.Black,
+                    modifier = Modifier
+                        .fillMaxSize()
                 ) {
-                    composable(Screen.Home.route) {
-                        HomeScreen(viewModel)
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(275.dp),
+                            horizontalAlignment = CenterHorizontally,
+                        ) {
+                            Image(
+                                painterResource(id = R.drawable.logo_whatanime),
+                                contentDescription = "Anime",
+                                modifier = Modifier
+                                    .size(200.dp)
+                                    .align(CenterHorizontally)
+                            )
+                            SearchBar(
+                                hint = "Search",
+                            )
+                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.secondary),
+                            horizontalAlignment = CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            AnimeScreen(viewModel.mainUiState)
+                        }
                     }
-//                    composable(Screen.AnimeDetail.route) {
-//                        val anime = requireNotNull(navController.previousBackStackEntry?.arguments?.getParcelable<Result>("anime"))
-//                        AnimeDetailScreen(anime)
-//                    }
                 }
             }
         }
     }
 
     @Composable
-    fun HomeScreen(viewModel: MainViewModel) {
-        Surface(
-            color = Color.Black,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(275.dp)
-                        .background(Color.Black),
-                    horizontalAlignment = CenterHorizontally,
-                ) {
-                    Image(
-                        painterResource(id = R.drawable.logo_whatanime),
-                        contentDescription = "Anime",
-                        modifier = Modifier
-                            .size(200.dp)
-                            .align(CenterHorizontally)
-                    )
-                    SearchBar(
-                        hint = "Search",
-                    ) {
-                    }
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .background(color = colorResource(id = R.color.primaryColor)),
-                    horizontalAlignment = CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    AnimeListScreen(viewModel.mainUiState)
-                }
-            }
-        }
-    }
-    @Composable
-    private fun AnimeListScreen(mainUiState: MainUiState) {
+    private fun AnimeScreen(mainUiState: MainUiState) {
         when (mainUiState) {
             is MainUiState.Success -> AnimeList(mainUiState.anime)
             is MainUiState.Error -> ErrorText()
@@ -155,9 +134,9 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun EmptyText() {
         Text(
-            text = "Cari Anime Impian Anda!",
+            text = "Selamat Datang Sepuh!^^",
             color = secondaryColor,
-
+            fontWeight = FontWeight.Bold
             )
     }
     @Composable
@@ -167,16 +146,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalComposeUiApi::class)
     @Composable
     private fun SearchBar(
         modifier: Modifier = Modifier,
         hint: String = "",
-        onSearch: (String) -> Unit = {},
     ) {
         var text by remember { mutableStateOf("") }
         var isHintDisplayed by remember { mutableStateOf(hint != "") }
         var warningVisible by remember { mutableStateOf(false) }
-        var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
         val context = LocalContext.current
 
         val chooseImageLauncher = rememberLauncherForActivityResult(
@@ -198,67 +176,78 @@ class MainActivity : ComponentActivity() {
                 }
             }
         )
-
         Box(modifier = modifier) {
-            BasicTextField(
-                value = text,
-                onValueChange = {
-                    warningVisible = it.isNotEmpty()
-                },
-                maxLines = 1,
-                singleLine = true,
-                textStyle = TextStyle(color = Color.Black),
-                modifier = Modifier
-                    .size(width = 300.dp, height = 40.dp)
-                    .background(Color.White, CircleShape)
-                    .padding(horizontal = 20.dp, vertical = 10.dp)
-                    .onFocusChanged {
-                        isHintDisplayed = !it.isFocused
+            var keyboardController = LocalSoftwareKeyboardController.current
+            Row {
+                BasicTextField(
+                    value = text,
+                    onValueChange = {
+                        text = it
                     },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    capitalization = KeyboardCapitalization.None,
-                    autoCorrect = false,
-                    imeAction = ImeAction.Search
-                ),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        onSearch(text)
-                        viewModel.getAnimesByUrl(text)
-                    }
-                ),
-            )
+                    maxLines = 1,
+                    singleLine = true,
+                    textStyle = TextStyle(color = Color.Black),
+                    modifier = Modifier
+                        .size(width = 300.dp, height = 40.dp)
+                        .background(Color.White, CircleShape)
+                        .padding(top = 10.dp, start = 15.dp)
+                        .onFocusChanged {
+                            isHintDisplayed = !it.isFocused
+                        },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrect = false,
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            if(validateUrl(text)){
+                                viewModel.getAnimesByUrl(text)
+                                keyboardController?.hide()
+                            }else{
+                                warningVisible = true
+                            }
+                        }
+                    ),
+                )
+                Icon(
+                    painterResource(id = R.drawable.folder),
+                    contentDescription = "search file",
+                    tint = Color.Unspecified,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable { chooseImageLauncher.launch("image/*") }
+                        .padding(start = 10.dp)
+                )
+            }
             if (isHintDisplayed) {
                 Text(
                     text = hint,
                     color = Color.LightGray,
-                    modifier = Modifier
-                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp, start = 15.dp)
                 )
             }
             if (warningVisible) {
                 Text(
-                    text = "Paste URL or Image Here",
+                    text = "Invalid URL: https require",
                     color = Color.Red,
-                    modifier = Modifier.padding(start = 12.dp, top = 40.dp)
+                    modifier = Modifier.padding(top = 40.dp, start = 15.dp)
                 )
             }
-            Icon(
-                painterResource(id = R.drawable.folder),
-                contentDescription = "search file",
-                tint = Color.Unspecified,
-                modifier = Modifier
-                    .size(48.dp)
-                    .align(CenterEnd)
-                    .padding(end = 20.dp, bottom = 10.dp)
-                    .clickable { chooseImageLauncher.launch("image/*") }
-            )
         }
     }
 
+    private fun validateUrl(url: String): Boolean {
+        val isValidUrl = Patterns.WEB_URL.matcher(url).matches() && url.startsWith("https://") && isImageExtension(url)
+        return (isValidUrl)
+    }
+    private fun isImageExtension(url: String): Boolean {
+        val imageExtensions = listOf(".jpg", ".jpeg", ".png", ".gif", ".bmp")
+        return imageExtensions.any { url.endsWith(it, ignoreCase = true) }
+    }
     fun showMessage(context: Context, message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
-
 
     @Composable
     private fun AnimeList(animes: List<Result>, modifier: Modifier = Modifier) {
@@ -271,6 +260,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun AnimeCard(anime: Result, modifier: Modifier = Modifier) {
+        val endingTime = doubleToTime(anime.to)
+        val startingTime = doubleToTime(anime.from)
         Card(modifier = modifier
             .padding(18.dp)
             .clickable {
@@ -283,10 +274,7 @@ class MainActivity : ComponentActivity() {
             )
 
         ) {
-            Column(
-                modifier = modifier
-                    .fillMaxWidth(),
-            ) {
+            Column{
                 AsyncImage(
                     model = ImageRequest.Builder(context = LocalContext.current)
                         .data(anime.image)
@@ -294,18 +282,29 @@ class MainActivity : ComponentActivity() {
                         .build(),
                     contentDescription = "anime image",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .height(200.dp)
                 )
                 Text(
-                    fontSize = 24.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.SansSerif,
                     modifier = modifier
                         .align(CenterHorizontally)
-                        .padding(20.dp),
-                    text = anime.anilist?.title?.english ?: "anime title"
+                        .padding(horizontal = 10.dp),
+                    text = "${checkData(anime.anilist?.title?.english)} (Episode ${anime.episode ?: "Admin lupa :v"})" ,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.SansSerif,
+                    modifier = modifier
+                        .align(CenterHorizontally),
+                    color = Color(0xFF086900),
+                    text = "${checkData(startingTime)} - ${checkData(endingTime)}",
+                    textAlign = TextAlign.Center
                 )
             }
         }
