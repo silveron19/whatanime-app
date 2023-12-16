@@ -27,11 +27,11 @@ Hopefully Whatanime can help you to know what your curiousity about an anime sti
 
 ## Screenshots
 
-<img src="app/src/assets/dashboard.png" width="250" height="250">
+<img src="app/src/assets/dashboard.png" width="250" height="500">
 
-<img src="app/src/assets/result.png" width="250" height="250">
+<img src="app/src/assets/result.png" width="250" height="500">
 
-<img src="app/src/assets/detail.png" width="250" height="250">
+<img src="app/src/assets/detail.png" width="250" height="500">
 
 
 
