@@ -230,7 +230,7 @@ class MainActivity : ComponentActivity() {
             }
             if (warningVisible) {
                 Text(
-                    text = "Invalid URL: https and image extension require",
+                    text = "Invalid URL: https require",
                     color = Color.Red,
                     modifier = Modifier.padding(top = 40.dp, start = 15.dp)
                 )
