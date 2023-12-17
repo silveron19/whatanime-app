@@ -18,7 +18,7 @@ import okhttp3.MultipartBody
 import java.io.IOException
 
 sealed interface MainUiState {
-    data class Success(val anime: List<Result>) : MainUiState
+    data class Success(val anime: List<Result>?) : MainUiState
     object Error : MainUiState
     object Loading : MainUiState
     object Empty: MainUiState
@@ -32,18 +32,16 @@ class MainViewModel(private val animeRepository: AnimeRepository): ViewModel() {
     fun getAnimesByUrl(url: String) = viewModelScope.launch {
         mainUiState = MainUiState.Loading
         try {
-            Log.d("MainViewModel", "url: ${url}")
             val result = animeRepository.getAnimeByUrl(
                 cutBorder = true,
                 anilistInfo = true,
                 url = url
             )
-            if(result.result!!.isEmpty()) {
-                mainUiState = MainUiState.Empty
+            mainUiState = if(result.result?.isEmpty() == true) {
+                MainUiState.Empty
             }else {
                 Log.d("MainViewModel", "url: ${result}")
-                Log.d("MainViewModel", "getAnime: ${result.result.size}")
-                mainUiState = MainUiState.Success(result.result)
+                MainUiState.Success(result.result)
             }
         } catch (e: IOException) {
             Log.d("MainViewMode", "getAnime error: ${e.message}")

@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun AnimeScreen(mainUiState: MainUiState) {
         when (mainUiState) {
-            is MainUiState.Success -> AnimeList(mainUiState.anime)
+            is MainUiState.Success -> mainUiState.anime?.let { AnimeList(it) }
             is MainUiState.Error -> ErrorText()
             is MainUiState.Loading -> LoadingBar()
             is MainUiState.Empty -> EmptyText()
@@ -201,8 +201,9 @@ class MainActivity : ComponentActivity() {
                     ),
                     keyboardActions = KeyboardActions(
                         onSearch = {
-                            if(validateUrl(text)){
+                            if(text.isNotEmpty()){
                                 viewModel.getAnimesByUrl(text)
+                                text = ""
                                 keyboardController?.hide()
                             }else{
                                 warningVisible = true
@@ -229,7 +230,7 @@ class MainActivity : ComponentActivity() {
             }
             if (warningVisible) {
                 Text(
-                    text = "Invalid URL: https require",
+                    text = "Invalid URL: https and image extension require",
                     color = Color.Red,
                     modifier = Modifier.padding(top = 40.dp, start = 15.dp)
                 )
@@ -238,7 +239,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun validateUrl(url: String): Boolean {
-        val isValidUrl = Patterns.WEB_URL.matcher(url).matches() && url.startsWith("https://") && isImageExtension(url)
+        val isValidUrl = Patterns.WEB_URL.matcher(url).matches() && url.startsWith("https://")
         return (isValidUrl)
     }
     private fun isImageExtension(url: String): Boolean {
