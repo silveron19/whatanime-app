@@ -1,4 +1,3 @@
-
 ![Logo](app/src/main/res/drawable/logo_whatanime.png)
 
 
@@ -7,10 +6,14 @@
 Whatanime is a mobile application for search a anime scene from input image or image url. This application use Trace.moe API & Jetpack Compose.
 
 Hopefully Whatanime can help you to know what your curiousity about an anime stills.
+
 ## Acknowledgements
 
 - [trace.moe API](https://soruly.github.io/trace.moe-api/)
 
+## You Can Try this Link
+
+[Neko Para OVA](https://images.plurk.com/32B15UXxymfSMwKGTObY5e.jpg)
 
 ## Tech Stack
 
